@@ -1,92 +1,81 @@
-<div class="p-6 space-y-5">
-  <div class="flex items-center justify-between">
-    <h1 class="text-2xl font-semibold text-lavender">Mis Tareas</h1>
-    <a href="{{ route('tasks.index') }}"
-      class="px-4 py-2 bg-yinmn hover:bg-yinmn/80 text-lavender text-sm
-                  rounded-lg border border-jordy/20 transition">
-      + Nueva tarea
-    </a>
+<div class="p-6 max-w-2xl mx-auto">
+  <h1 class="text-2xl font-semibold text-lavender mb-6">Nueva Tarea</h1>
+
+  @if(session('mensaje'))
+  <div class="mb-4 px-4 py-3 bg-yinmn/30 border border-jordy/30 rounded-lg text-jordy text-sm">
+    {{ session('mensaje') }}
   </div>
+  @endif
 
-  {{-- Filtros --}}
-  <div class="flex flex-wrap gap-3">
-    <input wire:model.live.debounce.300ms="busqueda" type="text"
-      placeholder="Buscar tarea..."
-      class="bg-cadet border border-yinmn/40 text-lavender placeholder-jordy/40
-                      rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-jordy transition" />
+  <form wire:submit="guardar"
+    class="bg-cadet rounded-xl p-6 border border-yinmn/40 space-y-5">
 
-    <select wire:model.live="filtroEstado"
-      class="bg-cadet border border-yinmn/40 text-lavender rounded-lg px-3 py-2 text-sm
-                      focus:outline-none focus:border-jordy transition">
-      <option value="">Todos los estados</option>
-      <option value="pendiente">Pendiente</option>
-      <option value="en_progreso">En progreso</option>
-      <option value="completada">Completada</option>
-    </select>
+    <div>
+      <label class="block text-xs font-medium text-jordy uppercase tracking-wider mb-1.5">Título *</label>
+      <input wire:model.live="title" type="text"
+        placeholder="Ej: Tarea de Cálculo capítulo 5"
+        class="w-full bg-oxford border border-yinmn/40 text-lavender placeholder-jordy/40
+                          rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-jordy transition
+                          @error('title') border-red-500/60 @enderror" />
+      @error('title') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
+    </div>
 
-    <select wire:model.live="filtroPrioridad"
-      class="bg-cadet border border-yinmn/40 text-lavender rounded-lg px-3 py-2 text-sm
-                      focus:outline-none focus:border-jordy transition">
-      <option value="">Toda prioridad</option>
-      <option value="alta">Alta</option>
-      <option value="media">Media</option>
-      <option value="baja">Baja</option>
-    </select>
-
-    <select wire:model.live="filtroMateria"
-      class="bg-cadet border border-yinmn/40 text-lavender rounded-lg px-3 py-2 text-sm
-                      focus:outline-none focus:border-jordy transition">
-      <option value="">Todas las materias</option>
-      @foreach($materias as $materia)
-      <option value="{{ $materia }}">{{ $materia }}</option>
-      @endforeach
-    </select>
-  </div>
-
-  {{-- Lista --}}
-  <div class="space-y-2">
-    @forelse($tareas as $tarea)
-    <div class="bg-cadet rounded-xl px-4 py-3 border flex items-center gap-4
-                        hover:border-jordy/40 transition
-                        {{ $tarea->isVencida() ? 'border-red-500/40' : 'border-yinmn/30' }}">
-
-      <input type="checkbox"
-        wire:click="cambiarEstado({{ $tarea->id }}, '{{ $tarea->status === 'completada' ? 'pendiente' : 'completada' }}')"
-        @checked($tarea->status === 'completada')
-      class="w-4 h-4 rounded accent-jordy cursor-pointer" />
-
-      <div class="flex-1 min-w-0">
-        <p class="text-sm text-lavender truncate
-                              {{ $tarea->status === 'completada' ? 'line-through opacity-40' : '' }}">
-          {{ $tarea->title }}
-        </p>
-        <p class="text-xs text-jordy/60 mt-0.5">
-          {{ $tarea->subject ?? 'Sin materia' }}
-          @if($tarea->due_date)
-          · {{ $tarea->due_date->format('d M Y') }}
-          @if($tarea->isVencida())
-          <span class="text-red-400">· Vencida</span>
-          @endif
-          @endif
-        </p>
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-xs font-medium text-jordy uppercase tracking-wider mb-1.5">Materia</label>
+        <input wire:model="subject" type="text" placeholder="Matemáticas, Física..."
+          class="w-full bg-oxford border border-yinmn/40 text-lavender placeholder-jordy/40
+                              rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-jordy transition" />
       </div>
-
-      <span class="text-xs px-2 py-1 rounded-full shrink-0
-                    {{ $tarea->priority === 'alta'  ? 'bg-red-500/20 text-red-300'   :
-                      ($tarea->priority === 'media' ? 'bg-yinmn/60 text-jordy'       :
-                                                      'bg-yinmn/20 text-jordy/70') }}">
-        {{ ucfirst($tarea->priority) }}
-      </span>
-
-      <button wire:click="eliminar({{ $tarea->id }})"
-        wire:confirm="¿Eliminar esta tarea?"
-        class="text-jordy/30 hover:text-red-400 transition text-xs shrink-0">✕</button>
+      <div>
+        <label class="block text-xs font-medium text-jordy uppercase tracking-wider mb-1.5">Prioridad</label>
+        <select wire:model="priority"
+          class="w-full bg-oxford border border-yinmn/40 text-lavender rounded-lg
+                               px-3 py-2.5 text-sm focus:outline-none focus:border-jordy transition">
+          <option value="baja">Baja</option>
+          <option value="media">Media</option>
+          <option value="alta">Alta</option>
+        </select>
+      </div>
     </div>
-    @empty
-    <div class="text-center py-16 text-jordy/40">
-      <p>No hay tareas aún — agrega la primera</p>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-xs font-medium text-jordy uppercase tracking-wider mb-1.5">Fecha límite</label>
+        <input wire:model.live="due_date" type="date"
+          class="w-full bg-oxford border border-yinmn/40 text-lavender rounded-lg
+                              px-3 py-2.5 text-sm focus:outline-none focus:border-jordy transition
+                              @error('due_date') border-red-500/60 @enderror" />
+        @error('due_date') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-jordy uppercase tracking-wider mb-1.5">Tiempo estimado (min)</label>
+        <input wire:model="estimated_minutes" type="number" min="5" max="480" placeholder="60"
+          class="w-full bg-oxford border border-yinmn/40 text-lavender placeholder-jordy/40
+                              rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-jordy transition" />
+        @error('estimated_minutes') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
+      </div>
     </div>
-    @endforelse
-  </div>
-  <div class="text-jordy/50">{{ $tareas->links() }}</div>
+
+    <div>
+      <label class="block text-xs font-medium text-jordy uppercase tracking-wider mb-1.5">Descripción</label>
+      <textarea wire:model="description" rows="3" placeholder="Detalles adicionales..."
+        class="w-full bg-oxford border border-yinmn/40 text-lavender placeholder-jordy/40
+                             rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-jordy
+                             transition resize-none"></textarea>
+    </div>
+
+    <div class="flex justify-end gap-3 pt-2">
+      <a href="{{ route('tasks.index') }}"
+        class="px-4 py-2 text-sm text-jordy border border-yinmn/40 rounded-lg hover:bg-yinmn/20 transition">
+        Cancelar
+      </a>
+      <button type="submit"
+        class="px-5 py-2 bg-yinmn hover:bg-yinmn/80 text-lavender text-sm
+                           rounded-lg border border-jordy/20 transition">
+        <span wire:loading.remove>Guardar tarea</span>
+        <span wire:loading>Guardando...</span>
+      </button>
+    </div>
+  </form>
 </div>
